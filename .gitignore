@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Build artifacts
+kernel/build/
+kernel/src/
+kernel/tarballs/*.tar.gz
+rootfs/build/
+iso/*.iso
+*.log
+*.tmp
+*.tar.gz
+
+# Temporary files
+*.swp
+*~
