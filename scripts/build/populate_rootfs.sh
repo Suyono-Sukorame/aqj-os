@@ -19,8 +19,9 @@ echo "-----------------------------------------------------------------"
 
 # 1. Membuat direktori Standar FHS Linux minimal
 echo "[*] Membuat direktori FHS dasar di ${ROOTFS_DIR}..."
-mkdir -p "${ROOTFS_DIR}"/{bin,sbin,etc,proc,sys,dev,tmp,run,var,usr/{bin,sbin,lib},mnt,root,home}
+mkdir -p "${ROOTFS_DIR}"/{bin,sbin,etc,proc,sys,dev,tmp,run,var,lib,lib64,usr/{bin,sbin,lib,lib64},mnt,root,home}
 mkdir -p "${ROOTFS_DIR}/var"/{log,run,tmp,spool}
+mkdir -p "${ROOTFS_DIR}/etc/ld.so.conf.d"
 
 # Modifikasi izin direktori transient
 chmod 1777 "${ROOTFS_DIR}/tmp" "${ROOTFS_DIR}/var/tmp" 2>/dev/null || true
@@ -88,8 +89,16 @@ tmpfs           /tmp            tmpfs   defaults        0       0
 EOF
 fi
 
-# 5. Ringkasan
+# 5. Menjalankan builder Glibc jika ada
+BUILD_GLIBC_SCRIPT="${SCRIPT_DIR}/build_glibc.sh"
+if [ -x "${BUILD_GLIBC_SCRIPT}" ]; then
+    echo "[*] Menjalankan Glibc build pipeline..."
+    "${BUILD_GLIBC_SCRIPT}"
+fi
+
+# 6. Ringkasan
 echo "-----------------------------------------------------------------"
-echo "[✓] RootFS dan konfigurasi Runit sukses disiapkan!"
+echo "[✓] RootFS, konfigurasi Runit, dan Glibc pipeline sukses disiapkan!"
 echo "    Lokasi RootFS: ${ROOTFS_DIR}"
 echo "================================================================="
+
