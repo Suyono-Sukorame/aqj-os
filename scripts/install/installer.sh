@@ -1,8 +1,43 @@
 #!/bin/sh
 # ==============================================================================
-# AQJ OS - Interactive CLI OS Installer (aqj-install)
+# AQJ OS - System Installer Backend (aqj-install)
 # ==============================================================================
 set -eu
+
+NON_INTERACTIVE=false
+TARGET_DISK=""
+NEW_HOSTNAME="aqj-os"
+NEW_USERNAME="aqj"
+NEW_PASSWORD="aqj123"
+
+# Parse CLI arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --non-interactive)
+            NON_INTERACTIVE=true
+            shift
+            ;;
+        --disk)
+            TARGET_DISK="$2"
+            shift 2
+            ;;
+        --hostname)
+            NEW_HOSTNAME="$2"
+            shift 2
+            ;;
+        --username)
+            NEW_USERNAME="$2"
+            shift 2
+            ;;
+        --password)
+            NEW_PASSWORD="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
 echo "================================================================="
 echo "               AQJ OS - System Installer (aqj-install)"
@@ -17,33 +52,41 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-echo ""
-echo "[1/6] Mendeteksi Drive & Partisi yang Tersedia:"
-echo "-----------------------------------------------------------------"
-if command -v lsblk >/dev/null 2>&1; then
-    lsblk -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINT
+if [ "${NON_INTERACTIVE}" = "false" ]; then
+    echo ""
+    echo "[1/6] Mendeteksi Drive & Partisi yang Tersedia:"
+    echo "-----------------------------------------------------------------"
+    if command -v lsblk >/dev/null 2>&1; then
+        lsblk -o NAME,SIZE,FSTYPE,TYPE,MOUNTPOINT
+    else
+        fdisk -l 2>/dev/null || echo "Info: fdisk tidak tersedia."
+    fi
+    echo "-----------------------------------------------------------------"
+
+    printf "\nMasukkan nama drive target (contoh: /dev/sda atau /dev/nvme0n1): "
+    read -r TARGET_DISK
+
+    if [ -z "${TARGET_DISK}" ] || [ ! -b "${TARGET_DISK}" ]; then
+        echo "ERROR: Drive target ${TARGET_DISK} tidak valid atau tidak ditemukan!" >&2
+        exit 1
+    fi
+
+    echo ""
+    echo "PERHATIAN KRUSIAL:"
+    echo "Seluruh data pada drive ${TARGET_DISK} akan DIHAPUS dan DIFORMAT!"
+    printf "Apakah Anda yakin ingin melanjutkan instalasi ke ${TARGET_DISK}? (y/N): "
+    read -r CONFIRM
+
+    if [ "${CONFIRM}" != "y" ] && [ "${CONFIRM}" != "Y" ]; then
+        echo "[!] Instalasi dibatalkan oleh pengguna."
+        exit 0
+    fi
 else
-    fdisk -l 2>/dev/null || echo "Info: fdisk tidak tersedia."
-fi
-echo "-----------------------------------------------------------------"
-
-printf "\nMasukkan nama drive target (contoh: /dev/sda atau /dev/nvme0n1): "
-read -r TARGET_DISK
-
-if [ -z "${TARGET_DISK}" ] || [ ! -b "${TARGET_DISK}" ]; then
-    echo "ERROR: Drive target ${TARGET_DISK} tidak valid atau tidak ditemukan!" >&2
-    exit 1
-fi
-
-echo ""
-echo "PERHATIAN KRUSIAL:"
-echo "Seluruh data pada drive ${TARGET_DISK} akan DIHAPUS dan DIFORMAT!"
-printf "Apakah Anda yakin ingin melanjutkan instalasi ke ${TARGET_DISK}? (y/N): "
-read -r CONFIRM
-
-if [ "${CONFIRM}" != "y" ] && [ "${CONFIRM}" != "Y" ]; then
-    echo "[!] Instalasi dibatalkan oleh pengguna."
-    exit 0
+    echo "[1/6] Non-Interactive Mode - Drive Target: ${TARGET_DISK}"
+    if [ -z "${TARGET_DISK}" ] || [ ! -b "${TARGET_DISK}" ]; then
+        echo "ERROR: Drive target ${TARGET_DISK} tidak valid atau tidak ditemukan!" >&2
+        exit 1
+    fi
 fi
 
 MOUNT_DIR="/mnt/aqj-target"
@@ -98,8 +141,15 @@ sysfs                       /sys            sysfs       nosuid,noexec,nodev 0   
 devtmpfs                    /dev            devtmpfs    mode=0755,nosuid    0     0
 EOF
 
-# Set Hostname default
-echo "aqj-os" > "${MOUNT_DIR}/etc/hostname"
+# Set Hostname
+echo "${NEW_HOSTNAME}" > "${MOUNT_DIR}/etc/hostname"
+
+# Buat User baru & Password jika diset
+if command -v chroot >/dev/null 2>&1; then
+    chroot "${MOUNT_DIR}" id -u "${NEW_USERNAME}" >/dev/null 2>&1 || chroot "${MOUNT_DIR}" useradd -m -s /bin/bash "${NEW_USERNAME}" 2>/dev/null || true
+    echo "${NEW_USERNAME}:${NEW_PASSWORD}" | chroot "${MOUNT_DIR}" chpasswd 2>/dev/null || true
+    echo "root:${NEW_PASSWORD}" | chroot "${MOUNT_DIR}" chpasswd 2>/dev/null || true
+fi
 
 echo ""
 echo "[6/6] Selesai & Unmount..."

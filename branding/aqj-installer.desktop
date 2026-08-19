@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Install AQJ OS
+Comment=AQJ OS Graphical Wizard System Installer
+Exec=sudo /sbin/aqj-install-gui
+Icon=system-software-install
+Terminal=false
+Categories=System;Installer;
+StartupNotify=true

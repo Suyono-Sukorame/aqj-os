@@ -9,7 +9,7 @@ GLIBC_VERSION="2.44"
 TARBALL_PATH="${PROJECT_ROOT}/packages/tarballs/glibc-${GLIBC_VERSION}.tar.gz"
 PACKAGES_BUILD_DIR="${PROJECT_ROOT}/packages/build"
 SRC_DIR="${PACKAGES_BUILD_DIR}/glibc-${GLIBC_VERSION}"
-BUILD_DIR="${SRC_DIR}/build"
+BUILD_DIR="/tmp/aqj-os-build/glibc-${GLIBC_VERSION}"
 STAGING_ROOTFS="${PROJECT_ROOT}/rootfs"
 
 # Deteksi Jumlah Core CPU
@@ -55,6 +55,7 @@ else
 fi
 
 # 4. Membuat Out-of-Tree Build Directory
+rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 
 # 5. Pengecekan OS Host
@@ -82,12 +83,12 @@ echo "[+] Mengonfigurasi Glibc (${GLIBC_VERSION})..."
         --disable-werror \
         --enable-kernel=4.19 \
         --enable-stack-protector=strong \
-        --libc_cv_slibdir=/lib64
+        libc_cv_slibdir=/lib64
 )
 
 # 7. Kompilasi Glibc
-echo "[+] Memulai kompilasi Glibc (make -j${JOBS})..."
-make -C "${BUILD_DIR}" -j"${JOBS}"
+echo "[+] Memulai kompilasi Glibc (make PARALLELMFLAGS=-j${JOBS})..."
+make -C "${BUILD_DIR}" PARALLELMFLAGS="-j${JOBS}"
 
 # 8. Instalasi ke Staging RootFS
 echo "[+] Memasang Glibc ke staging rootfs (${STAGING_ROOTFS})..."

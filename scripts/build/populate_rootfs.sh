@@ -9,6 +9,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 CONFIG_RUNIT="${PROJECT_ROOT}/configs/runit"
 ROOTFS_DIR="${PROJECT_ROOT}/rootfs"
+CLEAN_ARG="${1:-}"
 
 echo "================================================================="
 echo "           AQJ OS - RootFS Populator & Runit Setup"
@@ -93,35 +94,35 @@ fi
 BUILD_GLIBC_SCRIPT="${SCRIPT_DIR}/build_glibc.sh"
 if [ -x "${BUILD_GLIBC_SCRIPT}" ]; then
     echo "[*] Menjalankan Glibc build pipeline..."
-    "${BUILD_GLIBC_SCRIPT}"
+    "${BUILD_GLIBC_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 6. Menjalankan builder BusyBox jika ada
 BUILD_BUSYBOX_SCRIPT="${SCRIPT_DIR}/build_busybox.sh"
 if [ -x "${BUILD_BUSYBOX_SCRIPT}" ]; then
     echo "[*] Menjalankan BusyBox build pipeline..."
-    "${BUILD_BUSYBOX_SCRIPT}"
+    "${BUILD_BUSYBOX_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 7. Menjalankan builder util-linux jika ada
 BUILD_UTIL_LINUX_SCRIPT="${SCRIPT_DIR}/build_util_linux.sh"
 if [ -x "${BUILD_UTIL_LINUX_SCRIPT}" ]; then
     echo "[*] Menjalankan util-linux build pipeline..."
-    "${BUILD_UTIL_LINUX_SCRIPT}"
+    "${BUILD_UTIL_LINUX_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 8. Menjalankan builder eudev jika ada
 BUILD_EUDEV_SCRIPT="${SCRIPT_DIR}/build_eudev.sh"
 if [ -x "${BUILD_EUDEV_SCRIPT}" ]; then
     echo "[*] Menjalankan eudev build pipeline..."
-    "${BUILD_EUDEV_SCRIPT}"
+    "${BUILD_EUDEV_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 9. Menjalankan builder iwd jika ada
 BUILD_IWD_SCRIPT="${SCRIPT_DIR}/build_iwd.sh"
 if [ -x "${BUILD_IWD_SCRIPT}" ]; then
     echo "[*] Menjalankan iwd build pipeline..."
-    "${BUILD_IWD_SCRIPT}"
+    "${BUILD_IWD_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 10. Menyalin konfigurasi iwd ke rootfs
@@ -143,7 +144,7 @@ fi
 BUILD_DHCPCD_SCRIPT="${SCRIPT_DIR}/build_dhcpcd.sh"
 if [ -x "${BUILD_DHCPCD_SCRIPT}" ]; then
     echo "[*] Menjalankan dhcpcd build pipeline..."
-    "${BUILD_DHCPCD_SCRIPT}"
+    "${BUILD_DHCPCD_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 13. Menyalin konfigurasi dhcpcd ke rootfs
@@ -164,7 +165,7 @@ fi
 BUILD_XBPS_SCRIPT="${SCRIPT_DIR}/build_xbps.sh"
 if [ -x "${BUILD_XBPS_SCRIPT}" ]; then
     echo "[*] Menjalankan xbps build pipeline..."
-    "${BUILD_XBPS_SCRIPT}"
+    "${BUILD_XBPS_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 16. Menyalin konfigurasi repositori xbps ke rootfs
@@ -178,42 +179,60 @@ fi
 BUILD_XBPS_SRC_SCRIPT="${SCRIPT_DIR}/build_xbps_src.sh"
 if [ -x "${BUILD_XBPS_SRC_SCRIPT}" ]; then
     echo "[*] Menjalankan xbps-src / void-packages setup pipeline..."
-    "${BUILD_XBPS_SRC_SCRIPT}"
+    "${BUILD_XBPS_SRC_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 18. Menjalankan builder Bash jika ada
 BUILD_BASH_SCRIPT="${SCRIPT_DIR}/build_bash.sh"
 if [ -x "${BUILD_BASH_SCRIPT}" ]; then
     echo "[*] Menjalankan Bash build pipeline..."
-    "${BUILD_BASH_SCRIPT}"
+    "${BUILD_BASH_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 19. Menjalankan builder X.Org Server jika ada
 BUILD_XORG_SERVER_SCRIPT="${SCRIPT_DIR}/build_xorg_server.sh"
 if [ -x "${BUILD_XORG_SERVER_SCRIPT}" ]; then
     echo "[*] Menjalankan X.Org Server build pipeline..."
-    "${BUILD_XORG_SERVER_SCRIPT}"
+    "${BUILD_XORG_SERVER_SCRIPT}" ${CLEAN_ARG}
 fi
 
 # 20. Menjalankan builder xfdesktop jika ada
 BUILD_XFDESKTOP_SCRIPT="${SCRIPT_DIR}/build_xfdesktop.sh"
 if [ -x "${BUILD_XFDESKTOP_SCRIPT}" ]; then
     echo "[*] Menjalankan xfdesktop build pipeline..."
-    "${BUILD_XFDESKTOP_SCRIPT}"
+    "${BUILD_XFDESKTOP_SCRIPT}" ${CLEAN_ARG}
 fi
 
-# 21. Memasang script installer AQJ OS ke /sbin/aqj-install
+# 21. Memasang script installer AQJ OS (CLI & GUI Wizard)
 INSTALLER_SCRIPT="${PROJECT_ROOT}/scripts/install/installer.sh"
+GUI_INSTALLER_SCRIPT="${PROJECT_ROOT}/scripts/install/gui_installer.py"
+DESKTOP_ENTRY="${PROJECT_ROOT}/branding/aqj-installer.desktop"
+
+mkdir -p "${ROOTFS_DIR}/sbin" "${ROOTFS_DIR}/usr/share/applications" "${ROOTFS_DIR}/root/Desktop" "${ROOTFS_DIR}/home/aqj/Desktop"
+
 if [ -f "${INSTALLER_SCRIPT}" ]; then
-    echo "[*] Memasang AQJ OS installer ke /sbin/aqj-install..."
-    mkdir -p "${ROOTFS_DIR}/sbin"
+    echo "[*] Memasang AQJ OS CLI installer ke /sbin/aqj-install..."
     cp -f "${INSTALLER_SCRIPT}" "${ROOTFS_DIR}/sbin/aqj-install"
     chmod +x "${ROOTFS_DIR}/sbin/aqj-install"
 fi
 
+if [ -f "${GUI_INSTALLER_SCRIPT}" ]; then
+    echo "[*] Memasang AQJ OS GUI Wizard installer ke /sbin/aqj-install-gui..."
+    cp -f "${GUI_INSTALLER_SCRIPT}" "${ROOTFS_DIR}/sbin/aqj-install-gui"
+    chmod +x "${ROOTFS_DIR}/sbin/aqj-install-gui"
+fi
+
+if [ -f "${DESKTOP_ENTRY}" ]; then
+    echo "[*] Memasang pintasan Desktop Installer di XFCE..."
+    cp -f "${DESKTOP_ENTRY}" "${ROOTFS_DIR}/usr/share/applications/aqj-installer.desktop"
+    cp -f "${DESKTOP_ENTRY}" "${ROOTFS_DIR}/root/Desktop/aqj-installer.desktop"
+    cp -f "${DESKTOP_ENTRY}" "${ROOTFS_DIR}/home/aqj/Desktop/aqj-installer.desktop"
+    chmod +x "${ROOTFS_DIR}/root/Desktop/aqj-installer.desktop" "${ROOTFS_DIR}/home/aqj/Desktop/aqj-installer.desktop" 2>/dev/null || true
+fi
+
 # 22. Ringkasan
 echo "-----------------------------------------------------------------"
-echo "[✓] RootFS, Runit, Glibc, BusyBox, util-linux, eudev, iwd, dhcpcd, xbps, void-packages, Bash, X.Org Server, xfdesktop, dan aqj-install pipeline sukses disiapkan!"
+echo "[✓] RootFS, Runit, Glibc, BusyBox, util-linux, eudev, iwd, dhcpcd, xbps, void-packages, Bash, X.Org Server, xfdesktop, dan aqj-install-gui pipeline sukses disiapkan!"
 echo "    Lokasi RootFS: ${ROOTFS_DIR}"
 echo "================================================================="
 
