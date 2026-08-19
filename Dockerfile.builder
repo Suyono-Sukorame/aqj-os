@@ -1,7 +1,7 @@
 # ==============================================================================
 # AQJ OS - Official Linux x86_64 Build Environment
 # ==============================================================================
-FROM debian:bookworm-slim
+FROM --platform=linux/amd64 debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     file \
     kmod \
     dosfstools \
-    syslinux-utils \
+    syslinux \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace

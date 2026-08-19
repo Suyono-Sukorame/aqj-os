@@ -45,7 +45,7 @@ echo "[*] Menggunakan Container Engine: ${CONTAINER_CLI}"
 # 2. Build Docker Image (jika belum ada)
 if ! ${CONTAINER_CLI} image inspect "${IMAGE_NAME}" &>/dev/null; then
     echo "[*] Mem-build Docker Image '${IMAGE_NAME}' dari Dockerfile.builder..."
-    ${CONTAINER_CLI} build -t "${IMAGE_NAME}" -f "${PROJECT_ROOT}/Dockerfile.builder" "${PROJECT_ROOT}"
+    ${CONTAINER_CLI} build --platform linux/amd64 -t "${IMAGE_NAME}" -f "${PROJECT_ROOT}/Dockerfile.builder" "${PROJECT_ROOT}"
 else
     echo "[i] Docker Image '${IMAGE_NAME}' sudah tersedia."
 fi
@@ -61,6 +61,7 @@ echo "[*] Meluncurkan Kontainer Linux untuk kompilasi penuh 12 komponen..."
 echo "-----------------------------------------------------------------"
 
 ${CONTAINER_CLI} run --rm \
+    --platform linux/amd64 \
     --name "${CONTAINER_NAME}" \
     -v "${PROJECT_ROOT}:/workspace" \
     "${IMAGE_NAME}" \
