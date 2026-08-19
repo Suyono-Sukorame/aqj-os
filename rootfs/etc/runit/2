@@ -1,0 +1,17 @@
+#!/bin/sh
+# ==============================================================================
+# AQJ OS - Runit Stage 2: Service Supervision
+# ==============================================================================
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# Make sure service directory links exist
+SERVICE_DIR="/etc/runit/runsvdir/current"
+if [ ! -d "${SERVICE_DIR}" ]; then
+    SERVICE_DIR="/etc/runit/runsvdir/default"
+fi
+
+echo "[*] Runit Stage 2: Starting service supervisor (${SERVICE_DIR})..."
+
+# Run runsvdir to supervise all services in foreground
+exec runsvdir -P "${SERVICE_DIR}" 'log: ....................................................................................................................................................................................................................................................................................................................................................................................................'

@@ -1,0 +1,10 @@
+#!/bin/sh
+# ==============================================================================
+# AQJ OS - Runit Ctrl+Alt+Del Handler
+# ==============================================================================
+
+echo "[!] Ctrl+Alt+Del pressed. Initiating reboot..."
+touch /etc/runit/reboot
+if command -v sv >/dev/null 2>&1; then
+    sv -v shutdown /etc/runit/runsvdir/current/* 2>/dev/null || true
+fi

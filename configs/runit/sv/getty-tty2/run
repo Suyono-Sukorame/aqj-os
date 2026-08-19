@@ -1,0 +1,13 @@
+#!/bin/sh
+# ==============================================================================
+# AQJ OS - Getty TTY2 Service
+# ==============================================================================
+
+if command -v agetty >/dev/null 2>&1; then
+    exec agetty -8 tty2 38400 linux
+elif command -v getty >/dev/null 2>&1; then
+    exec getty 38400 tty2 linux
+else
+    echo "[!] No getty binary found for tty2"
+    sleep 5
+fi

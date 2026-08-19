@@ -1,0 +1,44 @@
+#!/bin/sh
+# ==============================================================================
+# AQJ OS - Runit Stage 3: System Shutdown / Reboot
+# ==============================================================================
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+echo "================================================================="
+echo "               Shutting down AQJ OS..."
+echo "================================================================="
+
+# 1. Stop all supervised services
+SERVICE_DIR="/etc/runit/runsvdir/current"
+if [ ! -d "${SERVICE_DIR}" ]; then
+    SERVICE_DIR="/etc/runit/runsvdir/default"
+fi
+
+if command -v sv >/dev/null 2>&1 && [ -d "${SERVICE_DIR}" ]; then
+    echo "[*] Stopping running services..."
+    sv -v -w 5 shutdown ${SERVICE_DIR}/* 2>/dev/null || true
+fi
+
+# 2. Terminate remaining processes
+echo "[*] Sending SIGTERM to processes..."
+killall5 -15 2>/dev/null || kill -15 -1 2>/dev/null || true
+sleep 1
+
+echo "[*] Sending SIGKILL to remaining processes..."
+killall5 -9 2>/dev/null || kill -9 -1 2>/dev/null || true
+
+# 3. Sync and remount filesystems read-only
+echo "[*] Syncing disks and remounting filesystems read-only..."
+sync
+umount -a -r 2>/dev/null || mount -o remount,ro / 2>/dev/null || true
+
+# 4. Check action (reboot vs poweroff)
+if [ -x /etc/runit/reboot ] || [ -f /etc/runit/reboot ]; then
+    echo "[*] Rebooting system..."
+    rm -f /etc/runit/reboot
+    exec reboot -f 2>/dev/null || exec halt -r -f 2>/dev/null
+else
+    echo "[*] Powering off system..."
+    exec poweroff -f 2>/dev/null || exec halt -p -f 2>/dev/null
+fi

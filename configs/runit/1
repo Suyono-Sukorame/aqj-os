@@ -1,0 +1,52 @@
+#!/bin/sh
+# ==============================================================================
+# AQJ OS - Runit Stage 1: System Initialization
+# ==============================================================================
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+echo "================================================================="
+echo "               Starting AQJ OS (Linux Kernel 7.1.8)"
+echo "================================================================="
+
+# 1. Mount Essential Virtual Filesystems
+echo "[*] Mounting virtual filesystems..."
+mount -t proc -o nosuid,noexec,nodev proc /proc 2>/dev/null || mount -t proc proc /proc
+mount -t sysfs -o nosuid,noexec,nodev sysfs /sys 2>/dev/null || mount -t sysfs sysfs /sys
+mount -t devtmpfs -o mode=0755,nosuid devtmpfs /dev 2>/dev/null || mount -t devtmpfs devtmpfs /dev
+
+mkdir -p /dev/pts /dev/shm /run /tmp
+mount -t devpts -o mode=0620,gid=5 devpts /dev/pts 2>/dev/null || true
+mount -t tmpfs -o mode=1777,nosuid,nodev tmpfs /dev/shm 2>/dev/null || true
+mount -t tmpfs -o mode=0755,nosuid,nodev tmpfs /run 2>/dev/null || true
+mount -t tmpfs -o mode=1777,nosuid,nodev tmpfs /tmp 2>/dev/null || true
+
+# 2. Hostname Setup
+if [ -f /etc/hostname ]; then
+    HOSTNAME="$(cat /etc/hostname)"
+elif [ -f /etc/runit/hostname ]; then
+    HOSTNAME="$(cat /etc/runit/hostname)"
+else
+    HOSTNAME="aqj-os"
+fi
+echo "${HOSTNAME}" > /proc/sys/kernel/hostname 2>/dev/null || true
+echo "[*] Hostname set to: ${HOSTNAME}"
+
+# 3. Clean transient directories
+echo "[*] Cleaning temporary directories..."
+rm -rf /run/* /tmp/* /tmp/.* 2>/dev/null || true
+
+# 4. Device Node / Coldplug Trigger (mdev/udev fallback)
+if command -v mdev >/dev/null 2>&1; then
+    echo "[*] Initializing mdev device manager..."
+    mdev -s
+elif command -v udevd >/dev/null 2>&1; then
+    echo "[*] Starting udev daemon..."
+    udevd --daemon
+    udevadm trigger --action=add --type=subsystems
+    udevadm trigger --action=add --type=devices
+    udevadm settle
+fi
+
+echo "[✓] AQJ OS Stage 1 completed successfully."
+exit 0
