@@ -60,11 +60,25 @@ if [ "${HAS_LIMINE_STAGE}" = "false" ]; then
     fi
 fi
 
+# 3.5 Jalankan initramfs builder jika ada
+BUILD_INITRAMFS_SCRIPT="${SCRIPT_DIR}/build_initramfs.sh"
+if [ -x "${BUILD_INITRAMFS_SCRIPT}" ]; then
+    echo "[*] Menjalankan initramfs builder pipeline..."
+    "${BUILD_INITRAMFS_SCRIPT}"
+fi
+
 # 4. Buat direktori Staging ISO
 echo "[*] Menyiapkan struktur direktori ISO Staging..."
 rm -rf "${STAGING_DIR}"
 mkdir -p "${STAGING_DIR}/boot/limine"
 mkdir -p "${STAGING_DIR}/EFI/BOOT"
+
+# Menyalin initramfs.img dari iso/ atau iso/boot/ jika ada
+if [ -f "${ISO_DIR}/initramfs.img" ]; then
+    echo "[*] Menyalin initramfs.img ke ISO staging..."
+    cp -f "${ISO_DIR}/initramfs.img" "${STAGING_DIR}/boot/initramfs.img"
+fi
+
 
 # 5. Salin konfigurasi Limine
 if [ -f "${CONFIG_BOOT}/limine.conf" ]; then

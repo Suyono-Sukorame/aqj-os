@@ -195,10 +195,28 @@ if [ -x "${BUILD_XORG_SERVER_SCRIPT}" ]; then
     "${BUILD_XORG_SERVER_SCRIPT}"
 fi
 
-# 20. Ringkasan
+# 20. Menjalankan builder xfdesktop jika ada
+BUILD_XFDESKTOP_SCRIPT="${SCRIPT_DIR}/build_xfdesktop.sh"
+if [ -x "${BUILD_XFDESKTOP_SCRIPT}" ]; then
+    echo "[*] Menjalankan xfdesktop build pipeline..."
+    "${BUILD_XFDESKTOP_SCRIPT}"
+fi
+
+# 21. Memasang script installer AQJ OS ke /sbin/aqj-install
+INSTALLER_SCRIPT="${PROJECT_ROOT}/scripts/install/installer.sh"
+if [ -f "${INSTALLER_SCRIPT}" ]; then
+    echo "[*] Memasang AQJ OS installer ke /sbin/aqj-install..."
+    mkdir -p "${ROOTFS_DIR}/sbin"
+    cp -f "${INSTALLER_SCRIPT}" "${ROOTFS_DIR}/sbin/aqj-install"
+    chmod +x "${ROOTFS_DIR}/sbin/aqj-install"
+fi
+
+# 22. Ringkasan
 echo "-----------------------------------------------------------------"
-echo "[✓] RootFS, Runit, Glibc, BusyBox, util-linux, eudev, iwd, dhcpcd, xbps, void-packages, Bash, dan X.Org Server pipeline sukses disiapkan!"
+echo "[✓] RootFS, Runit, Glibc, BusyBox, util-linux, eudev, iwd, dhcpcd, xbps, void-packages, Bash, X.Org Server, xfdesktop, dan aqj-install pipeline sukses disiapkan!"
 echo "    Lokasi RootFS: ${ROOTFS_DIR}"
 echo "================================================================="
+
+
 
 

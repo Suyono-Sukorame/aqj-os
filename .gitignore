@@ -10,9 +10,13 @@ kernel/tarballs/*.tar.gz
 packages/build/
 packages/void-packages/
 packages/tarballs/*.tar.gz
+packages/tarballs/*.tar.bz2
 rootfs/*
 !rootfs/.gitkeep
 iso/*.iso
+iso/initramfs.img
+iso/boot/
+iso/staging/
 *.log
 *.tmp
 *.tar.gz
