@@ -1,0 +1,7 @@
+#!/bin/sh
+# ==============================================================================
+# AQJ OS - iwd Service (iNet Wireless Daemon)
+# Supervised by Runit - Auto-start Wi-Fi management on boot
+# ==============================================================================
+
+exec /usr/libexec/iwd 2>&1

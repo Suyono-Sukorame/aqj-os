@@ -8,6 +8,7 @@ kernel/build/
 kernel/src/
 kernel/tarballs/*.tar.gz
 packages/build/
+packages/void-packages/
 packages/tarballs/*.tar.gz
 rootfs/*
 !rootfs/.gitkeep

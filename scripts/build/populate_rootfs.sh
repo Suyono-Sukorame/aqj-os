@@ -96,9 +96,109 @@ if [ -x "${BUILD_GLIBC_SCRIPT}" ]; then
     "${BUILD_GLIBC_SCRIPT}"
 fi
 
-# 6. Ringkasan
+# 6. Menjalankan builder BusyBox jika ada
+BUILD_BUSYBOX_SCRIPT="${SCRIPT_DIR}/build_busybox.sh"
+if [ -x "${BUILD_BUSYBOX_SCRIPT}" ]; then
+    echo "[*] Menjalankan BusyBox build pipeline..."
+    "${BUILD_BUSYBOX_SCRIPT}"
+fi
+
+# 7. Menjalankan builder util-linux jika ada
+BUILD_UTIL_LINUX_SCRIPT="${SCRIPT_DIR}/build_util_linux.sh"
+if [ -x "${BUILD_UTIL_LINUX_SCRIPT}" ]; then
+    echo "[*] Menjalankan util-linux build pipeline..."
+    "${BUILD_UTIL_LINUX_SCRIPT}"
+fi
+
+# 8. Menjalankan builder eudev jika ada
+BUILD_EUDEV_SCRIPT="${SCRIPT_DIR}/build_eudev.sh"
+if [ -x "${BUILD_EUDEV_SCRIPT}" ]; then
+    echo "[*] Menjalankan eudev build pipeline..."
+    "${BUILD_EUDEV_SCRIPT}"
+fi
+
+# 9. Menjalankan builder iwd jika ada
+BUILD_IWD_SCRIPT="${SCRIPT_DIR}/build_iwd.sh"
+if [ -x "${BUILD_IWD_SCRIPT}" ]; then
+    echo "[*] Menjalankan iwd build pipeline..."
+    "${BUILD_IWD_SCRIPT}"
+fi
+
+# 10. Menyalin konfigurasi iwd ke rootfs
+if [ -f "${PROJECT_ROOT}/configs/network/iwd-main.conf" ]; then
+    echo "[*] Memasang konfigurasi iwd ke rootfs..."
+    mkdir -p "${ROOTFS_DIR}/etc/iwd"
+    cp -f "${PROJECT_ROOT}/configs/network/iwd-main.conf" "${ROOTFS_DIR}/etc/iwd/main.conf"
+fi
+
+# 11. Mengaktifkan service iwd di Runit
+if [ -d "${CONFIG_RUNIT}/sv/iwd" ]; then
+    echo "[*] Menyalin dan mengaktifkan service iwd..."
+    cp -r "${CONFIG_RUNIT}/sv/iwd" "${ROOTFS_DIR}/etc/sv/"
+    chmod +x "${ROOTFS_DIR}/etc/sv/iwd/run" 2>/dev/null || true
+    ln -sf "/etc/sv/iwd" "${ROOTFS_DIR}/etc/runit/runsvdir/default/iwd" 2>/dev/null || true
+fi
+
+# 12. Menjalankan builder dhcpcd jika ada
+BUILD_DHCPCD_SCRIPT="${SCRIPT_DIR}/build_dhcpcd.sh"
+if [ -x "${BUILD_DHCPCD_SCRIPT}" ]; then
+    echo "[*] Menjalankan dhcpcd build pipeline..."
+    "${BUILD_DHCPCD_SCRIPT}"
+fi
+
+# 13. Menyalin konfigurasi dhcpcd ke rootfs
+if [ -f "${PROJECT_ROOT}/configs/network/dhcpcd.conf" ]; then
+    echo "[*] Memasang konfigurasi dhcpcd ke rootfs..."
+    cp -f "${PROJECT_ROOT}/configs/network/dhcpcd.conf" "${ROOTFS_DIR}/etc/dhcpcd.conf"
+fi
+
+# 14. Mengaktifkan service dhcpcd di Runit
+if [ -d "${CONFIG_RUNIT}/sv/dhcpcd" ]; then
+    echo "[*] Menyalin dan mengaktifkan service dhcpcd..."
+    cp -r "${CONFIG_RUNIT}/sv/dhcpcd" "${ROOTFS_DIR}/etc/sv/"
+    chmod +x "${ROOTFS_DIR}/etc/sv/dhcpcd/run" 2>/dev/null || true
+    ln -sf "/etc/sv/dhcpcd" "${ROOTFS_DIR}/etc/runit/runsvdir/default/dhcpcd" 2>/dev/null || true
+fi
+
+# 15. Menjalankan builder xbps jika ada
+BUILD_XBPS_SCRIPT="${SCRIPT_DIR}/build_xbps.sh"
+if [ -x "${BUILD_XBPS_SCRIPT}" ]; then
+    echo "[*] Menjalankan xbps build pipeline..."
+    "${BUILD_XBPS_SCRIPT}"
+fi
+
+# 16. Menyalin konfigurasi repositori xbps ke rootfs
+if [ -f "${PROJECT_ROOT}/configs/network/xbps-repos.conf" ]; then
+    echo "[*] Memasang konfigurasi repositori xbps ke rootfs..."
+    mkdir -p "${ROOTFS_DIR}/etc/xbps.d"
+    cp -f "${PROJECT_ROOT}/configs/network/xbps-repos.conf" "${ROOTFS_DIR}/etc/xbps.d/00-repository-main.conf"
+fi
+
+# 17. Menjalankan builder/setup xbps-src / void-packages jika ada
+BUILD_XBPS_SRC_SCRIPT="${SCRIPT_DIR}/build_xbps_src.sh"
+if [ -x "${BUILD_XBPS_SRC_SCRIPT}" ]; then
+    echo "[*] Menjalankan xbps-src / void-packages setup pipeline..."
+    "${BUILD_XBPS_SRC_SCRIPT}"
+fi
+
+# 18. Menjalankan builder Bash jika ada
+BUILD_BASH_SCRIPT="${SCRIPT_DIR}/build_bash.sh"
+if [ -x "${BUILD_BASH_SCRIPT}" ]; then
+    echo "[*] Menjalankan Bash build pipeline..."
+    "${BUILD_BASH_SCRIPT}"
+fi
+
+# 19. Menjalankan builder X.Org Server jika ada
+BUILD_XORG_SERVER_SCRIPT="${SCRIPT_DIR}/build_xorg_server.sh"
+if [ -x "${BUILD_XORG_SERVER_SCRIPT}" ]; then
+    echo "[*] Menjalankan X.Org Server build pipeline..."
+    "${BUILD_XORG_SERVER_SCRIPT}"
+fi
+
+# 20. Ringkasan
 echo "-----------------------------------------------------------------"
-echo "[✓] RootFS, konfigurasi Runit, dan Glibc pipeline sukses disiapkan!"
+echo "[✓] RootFS, Runit, Glibc, BusyBox, util-linux, eudev, iwd, dhcpcd, xbps, void-packages, Bash, dan X.Org Server pipeline sukses disiapkan!"
 echo "    Lokasi RootFS: ${ROOTFS_DIR}"
 echo "================================================================="
+
 

@@ -1,0 +1,9 @@
+#!/bin/sh
+# ==============================================================================
+# AQJ OS - dhcpcd Service (DHCP Client Daemon)
+# Supervised by Runit - Manages IP address acquisition on wired interfaces
+# ==============================================================================
+
+# Jalankan dhcpcd pada interface kabel (eth0/ens3)
+# dhcpcd akan otomatis mendeteksi semua interface yang tersedia
+exec /sbin/dhcpcd -B -f /etc/dhcpcd.conf 2>&1
