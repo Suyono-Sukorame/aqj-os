@@ -97,6 +97,20 @@ if [ -x "${BUILD_GLIBC_SCRIPT}" ]; then
     "${BUILD_GLIBC_SCRIPT}" ${CLEAN_ARG}
 fi
 
+# Sanitize glibc ld scripts and stage libraries into container system paths
+if [ -f "${ROOTFS_DIR}/usr/lib/libc.so" ]; then
+    sed -i 's|/lib64/||g; s|/usr/lib/||g' "${ROOTFS_DIR}/usr/lib/libc.so" 2>/dev/null || true
+fi
+if [ -f "${ROOTFS_DIR}/usr/lib/libm.so" ]; then
+    sed -i 's|/lib64/||g; s|/usr/lib/||g' "${ROOTFS_DIR}/usr/lib/libm.so" 2>/dev/null || true
+fi
+
+if [ "$(uname -s)" = "Linux" ]; then
+    mkdir -p /lib64 /usr/lib
+    cp -d -r -f "${ROOTFS_DIR}"/lib64/* /lib64/ 2>/dev/null || true
+    cp -d -r -f "${ROOTFS_DIR}"/usr/lib/* /usr/lib/ 2>/dev/null || true
+fi
+
 # 6. Menjalankan builder BusyBox jika ada
 BUILD_BUSYBOX_SCRIPT="${SCRIPT_DIR}/build_busybox.sh"
 if [ -x "${BUILD_BUSYBOX_SCRIPT}" ]; then

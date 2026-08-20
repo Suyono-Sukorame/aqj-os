@@ -40,6 +40,27 @@ fi
 # 2. Persiapan Folder Build
 mkdir -p "${PACKAGES_BUILD_DIR}" "${STAGING_ROOTFS}"
 
+# Fast-skip if glibc is already installed and not --clean
+if [[ -f "${STAGING_ROOTFS}/lib64/libc.so.6" && -f "${STAGING_ROOTFS}/usr/lib/libc_nonshared.a" && "${1:-}" != "--clean" ]]; then
+    echo "[i] Glibc ${GLIBC_VERSION} sudah terpasang di ${STAGING_ROOTFS}. Melewati kompilasi ulang."
+    
+    # Fix GNU ld script absolute path issue
+    if [[ -f "${STAGING_ROOTFS}/usr/lib/libc.so" ]]; then
+        sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libc.so" 2>/dev/null || true
+    fi
+    if [[ -f "${STAGING_ROOTFS}/usr/lib/libm.so" ]]; then
+        sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libm.so" 2>/dev/null || true
+    fi
+
+    if [[ "$(uname -s)" == "Linux" ]]; then
+        echo "[+] Memasang berkas library Glibc ke direktori sistem kontainer..."
+        mkdir -p /lib64 /usr/lib
+        cp -d -r -f "${STAGING_ROOTFS}"/lib64/* /lib64/ 2>/dev/null || true
+        cp -d -r -f "${STAGING_ROOTFS}"/usr/lib/* /usr/lib/ 2>/dev/null || true
+    fi
+    exit 0
+fi
+
 # Clean flag check
 if [[ "${1:-}" == "--clean" ]]; then
     echo "[+] Membersihkan direktori build glibc..."
@@ -93,6 +114,21 @@ make -C "${BUILD_DIR}" PARALLELMFLAGS="-j${JOBS}"
 # 8. Instalasi ke Staging RootFS
 echo "[+] Memasang Glibc ke staging rootfs (${STAGING_ROOTFS})..."
 make -C "${BUILD_DIR}" install DESTDIR="${STAGING_ROOTFS}"
+
+# Fix GNU ld script absolute path issue
+if [[ -f "${STAGING_ROOTFS}/usr/lib/libc.so" ]]; then
+    sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libc.so"
+fi
+if [[ -f "${STAGING_ROOTFS}/usr/lib/libm.so" ]]; then
+    sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libm.so"
+fi
+
+if [[ "${OS_TYPE}" == "Linux" ]]; then
+    echo "[+] Memasang berkas library Glibc ke direktori sistem kontainer..."
+    mkdir -p /lib64 /usr/lib
+    cp -d -r -f "${STAGING_ROOTFS}"/lib64/* /lib64/ 2>/dev/null || true
+    cp -d -r -f "${STAGING_ROOTFS}"/usr/lib/* /usr/lib/ 2>/dev/null || true
+fi
 
 echo "================================================================="
 echo "  Kompilasi & Pemasangan Glibc ${GLIBC_VERSION} Selesai dengan Sukses!"
