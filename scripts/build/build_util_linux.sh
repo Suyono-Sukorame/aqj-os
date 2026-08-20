@@ -37,7 +37,7 @@ fi
 mkdir -p "${PACKAGES_BUILD_DIR}" "${STAGING_ROOTFS}"
 
 # 3. Ekstraksi Source Code util-linux
-EXTRACTED_DIR=$(tar -tf "${TARBALL_PATH}" | head -n 1 | cut -f1 -d"/")
+EXTRACTED_DIR=$(set +o pipefail; tar -tf "${TARBALL_PATH}" | head -n 1 | cut -f1 -d"/")
 if [[ -z "${EXTRACTED_DIR}" ]]; then
     EXTRACTED_DIR="util-linux-2.41"
 fi
@@ -83,6 +83,8 @@ echo "[+] Mengonfigurasi util-linux..."
         --sysconfdir=/etc \
         --localstatedir=/var \
         --without-python \
+        --disable-liblastlog2 \
+        --disable-pam-lastlog2 \
         --disable-use-tty-group \
         --disable-makeinstall-chown \
         --disable-makeinstall-setuid

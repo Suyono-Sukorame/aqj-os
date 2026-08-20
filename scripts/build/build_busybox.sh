@@ -37,7 +37,7 @@ fi
 mkdir -p "${PACKAGES_BUILD_DIR}" "${STAGING_ROOTFS}"
 
 # 3. Ekstraksi Source Code BusyBox
-EXTRACTED_DIR=$(tar -tf "${TARBALL_PATH}" | head -n 1 | cut -f1 -d"/")
+EXTRACTED_DIR=$(set +o pipefail; tar -tf "${TARBALL_PATH}" | head -n 1 | cut -f1 -d"/")
 if [[ -z "${EXTRACTED_DIR}" ]]; then
     EXTRACTED_DIR="busybox"
 fi

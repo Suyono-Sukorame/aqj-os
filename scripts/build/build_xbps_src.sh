@@ -38,7 +38,7 @@ if [[ ! -d "${VOID_PACKAGES_DIR}" ]]; then
     tar -xzf "${TARBALL_PATH}" -C "${TEMP_EXTRACT_DIR}" 2>/dev/null || true
 
     # Pindahkan dari void-packages-master ke packages/void-packages
-    INSIDE_DIR=$(ls "${TEMP_EXTRACT_DIR}" | head -n 1)
+    INSIDE_DIR=$(set +o pipefail; ls "${TEMP_EXTRACT_DIR}" | head -n 1)
     if [[ -n "${INSIDE_DIR}" && -d "${TEMP_EXTRACT_DIR}/${INSIDE_DIR}" ]]; then
         mv "${TEMP_EXTRACT_DIR}/${INSIDE_DIR}" "${VOID_PACKAGES_DIR}"
     else
