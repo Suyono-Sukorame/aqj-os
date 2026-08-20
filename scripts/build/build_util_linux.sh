@@ -73,6 +73,7 @@ fi
 
 # 5. Konfigurasi util-linux
 echo "[+] Mengonfigurasi util-linux..."
+ROOTFS_DIR="$(cd "${PROJECT_ROOT}/rootfs" && pwd)"
 (
     cd "${SRC_DIR}"
     ./configure \
@@ -87,7 +88,9 @@ echo "[+] Mengonfigurasi util-linux..."
         --disable-pam-lastlog2 \
         --disable-use-tty-group \
         --disable-makeinstall-chown \
-        --disable-makeinstall-setuid
+        --disable-makeinstall-setuid \
+        CPPFLAGS="-I${ROOTFS_DIR}/usr/include" \
+        LDFLAGS="-L${ROOTFS_DIR}/lib64 -L${ROOTFS_DIR}/usr/lib -Wl,-rpath-link,${ROOTFS_DIR}/lib64 -Wl,-rpath-link,${ROOTFS_DIR}/usr/lib"
 )
 
 # 6. Kompilasi util-linux

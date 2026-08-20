@@ -44,7 +44,7 @@ mkdir -p "${PACKAGES_BUILD_DIR}" "${STAGING_ROOTFS}"
 if [[ -f "${STAGING_ROOTFS}/lib64/libc.so.6" && -f "${STAGING_ROOTFS}/usr/lib/libc_nonshared.a" && "${1:-}" != "--clean" ]]; then
     echo "[i] Glibc ${GLIBC_VERSION} sudah terpasang di ${STAGING_ROOTFS}. Melewati kompilasi ulang."
     
-    # Fix GNU ld script absolute path issue
+    # Fix GNU ld script absolute path issue (relative paths so linker uses search path)
     if [[ -f "${STAGING_ROOTFS}/usr/lib/libc.so" ]]; then
         sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libc.so" 2>/dev/null || true
     fi
@@ -52,12 +52,10 @@ if [[ -f "${STAGING_ROOTFS}/lib64/libc.so.6" && -f "${STAGING_ROOTFS}/usr/lib/li
         sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libm.so" 2>/dev/null || true
     fi
 
-    if [[ "$(uname -s)" == "Linux" ]]; then
-        echo "[+] Memasang berkas library Glibc ke direktori sistem kontainer..."
-        mkdir -p /lib64 /usr/lib
-        cp -d -r -f "${STAGING_ROOTFS}"/lib64/* /lib64/ 2>/dev/null || true
-        cp -d -r -f "${STAGING_ROOTFS}"/usr/lib/* /usr/lib/ 2>/dev/null || true
-    fi
+    # Export rootfs library paths without touching /lib64 (which would break container's own glibc)
+    export LIBRARY_PATH="${STAGING_ROOTFS}/lib64:${STAGING_ROOTFS}/usr/lib:${LIBRARY_PATH:-}"
+    export PKG_CONFIG_LIBDIR="${STAGING_ROOTFS}/usr/lib/pkgconfig:${STAGING_ROOTFS}/usr/share/pkgconfig"
+    echo "[i] LIBRARY_PATH set to: ${LIBRARY_PATH}"
     exit 0
 fi
 
@@ -115,20 +113,18 @@ make -C "${BUILD_DIR}" PARALLELMFLAGS="-j${JOBS}"
 echo "[+] Memasang Glibc ke staging rootfs (${STAGING_ROOTFS})..."
 make -C "${BUILD_DIR}" install DESTDIR="${STAGING_ROOTFS}"
 
-# Fix GNU ld script absolute path issue
+# Fix GNU ld script absolute path issue (relative paths so linker uses search path)
 if [[ -f "${STAGING_ROOTFS}/usr/lib/libc.so" ]]; then
-    sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libc.so"
+    sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libc.so" 2>/dev/null || true
 fi
 if [[ -f "${STAGING_ROOTFS}/usr/lib/libm.so" ]]; then
-    sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libm.so"
+    sed -i 's|/lib64/||g; s|/usr/lib/||g' "${STAGING_ROOTFS}/usr/lib/libm.so" 2>/dev/null || true
 fi
 
-if [[ "${OS_TYPE}" == "Linux" ]]; then
-    echo "[+] Memasang berkas library Glibc ke direktori sistem kontainer..."
-    mkdir -p /lib64 /usr/lib
-    cp -d -r -f "${STAGING_ROOTFS}"/lib64/* /lib64/ 2>/dev/null || true
-    cp -d -r -f "${STAGING_ROOTFS}"/usr/lib/* /usr/lib/ 2>/dev/null || true
-fi
+# Set LIBRARY_PATH so downstream builds find our glibc without touching /lib64
+export LIBRARY_PATH="${STAGING_ROOTFS}/lib64:${STAGING_ROOTFS}/usr/lib:${LIBRARY_PATH:-}"
+export PKG_CONFIG_LIBDIR="${STAGING_ROOTFS}/usr/lib/pkgconfig:${STAGING_ROOTFS}/usr/share/pkgconfig"
+echo "[i] LIBRARY_PATH set to: ${LIBRARY_PATH}"
 
 echo "================================================================="
 echo "  Kompilasi & Pemasangan Glibc ${GLIBC_VERSION} Selesai dengan Sukses!"

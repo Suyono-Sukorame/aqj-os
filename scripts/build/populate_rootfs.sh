@@ -97,7 +97,7 @@ if [ -x "${BUILD_GLIBC_SCRIPT}" ]; then
     "${BUILD_GLIBC_SCRIPT}" ${CLEAN_ARG}
 fi
 
-# Sanitize glibc ld scripts and stage libraries into container system paths
+# Sanitize glibc ld scripts - remove absolute prefixes so linker uses LIBRARY_PATH search
 if [ -f "${ROOTFS_DIR}/usr/lib/libc.so" ]; then
     sed -i 's|/lib64/||g; s|/usr/lib/||g' "${ROOTFS_DIR}/usr/lib/libc.so" 2>/dev/null || true
 fi
@@ -105,11 +105,14 @@ if [ -f "${ROOTFS_DIR}/usr/lib/libm.so" ]; then
     sed -i 's|/lib64/||g; s|/usr/lib/||g' "${ROOTFS_DIR}/usr/lib/libm.so" 2>/dev/null || true
 fi
 
-if [ "$(uname -s)" = "Linux" ]; then
-    mkdir -p /lib64 /usr/lib
-    cp -d -r -f "${ROOTFS_DIR}"/lib64/* /lib64/ 2>/dev/null || true
-    cp -d -r -f "${ROOTFS_DIR}"/usr/lib/* /usr/lib/ 2>/dev/null || true
-fi
+# Export rootfs lib paths so all downstream builds (busybox, util-linux, etc.) find our glibc.
+# Do NOT touch /lib64 or /usr/lib — that would break the container's own glibc and tools.
+export LIBRARY_PATH="${ROOTFS_DIR}/lib64:${ROOTFS_DIR}/usr/lib${LIBRARY_PATH:+:${LIBRARY_PATH}}"
+export PKG_CONFIG_LIBDIR="${ROOTFS_DIR}/usr/lib/pkgconfig:${ROOTFS_DIR}/usr/share/pkgconfig"
+export PKG_CONFIG_SYSROOT_DIR="${ROOTFS_DIR}"
+export CPPFLAGS="-I${ROOTFS_DIR}/usr/include"
+export LDFLAGS="-L${ROOTFS_DIR}/lib64 -L${ROOTFS_DIR}/usr/lib -Wl,-rpath-link,${ROOTFS_DIR}/lib64 -Wl,-rpath-link,${ROOTFS_DIR}/usr/lib"
+echo "[i] LIBRARY_PATH set to: ${LIBRARY_PATH}"
 
 # 6. Menjalankan builder BusyBox jika ada
 BUILD_BUSYBOX_SCRIPT="${SCRIPT_DIR}/build_busybox.sh"
