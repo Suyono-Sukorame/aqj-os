@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
     g++ \
+    clang \
+    lld \
+    llvm \
     make \
     bison \
     flex \
@@ -31,10 +34,63 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev \
     libelf-dev \
     libell-dev \
+    libdbus-1-dev \
+    libreadline-dev \
     libncurses-dev \
     libglib2.0-dev \
     libudev-dev \
     libxcb1-dev \
+    liblzma-dev \
+    libzstd-dev \
+    libpixman-1-dev \
+    libx11-dev \
+    libxext-dev \
+    libxrender-dev \
+    libxrandr-dev \
+    libxinerama-dev \
+    libxcursor-dev \
+    libxdamage-dev \
+    libxfixes-dev \
+    libxkbcommon-dev \
+    libxau-dev \
+    libxdmcp-dev \
+    libxfont-dev \
+    libpciaccess-dev \
+    libdrm-dev \
+    libgl1-mesa-dev \
+    libegl1-mesa-dev \
+    libgbm-dev \
+    libwayland-dev \
+    libxshmfence-dev \
+    libfontconfig1-dev \
+    libfreetype-dev \
+    libunwind-dev \
+    libgcrypt20-dev \
+    libgudev-1.0-dev \
+    libjson-glib-dev \
+    libgtk-3-dev \
+    libgtk-4-dev \
+    libglib2.0-dev-bin \
+    libxfce4util-dev \
+    libxfce4ui-2-dev \
+    libwnck-3-dev \
+    libnotify-dev \
+    librsvg2-dev \
+    libxfconf-0-dev \
+    libexo-2-dev \
+    libgarcon-1-0-dev \
+    libcairo2-dev \
+    libdbus-glib-1-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libgif-dev \
+    xkb-data \
+    x11-xkb-utils \
+    xauth \
+    xfonts-base \
+    xfonts-utils \
+    x11-utils \
+    x11-xserver-utils \
     rsync \
     git \
     curl \
@@ -44,7 +100,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     kmod \
     dosfstools \
     syslinux \
+    nasm \
+    mtools \
     gawk \
+    xsltproc \
+    docbook-xsl \
+    docbook-xml \
+    libxslt1-dev \
+    gperf \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace

@@ -6,7 +6,7 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EUDEV_DIR="${PROJECT_ROOT}/eudev"
-BUILD_DIR="${EUDEV_DIR}/build"
+BUILD_DIR="${EUDEV_DIR}/eudev-build"
 STAGING_ROOTFS="${PROJECT_ROOT}/rootfs"
 
 # Deteksi Jumlah Core CPU

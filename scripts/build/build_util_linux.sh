@@ -84,6 +84,7 @@ ROOTFS_DIR="$(cd "${PROJECT_ROOT}/rootfs" && pwd)"
         --sysconfdir=/etc \
         --localstatedir=/var \
         --without-python \
+        --disable-lsfd \
         --disable-liblastlog2 \
         --disable-pam-lastlog2 \
         --disable-use-tty-group \

@@ -1,1 +1,1 @@
-/sbin/runit-init
+../bin/busybox

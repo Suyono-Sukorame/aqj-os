@@ -8,6 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 LIMINE_DIR="${PROJECT_ROOT}/limine"
+LIMINE_BIN_DIR="${LIMINE_DIR}/bin"
 CONFIG_BOOT="${PROJECT_ROOT}/configs/boot"
 ISO_DIR="${PROJECT_ROOT}/iso"
 STAGING_DIR="${ISO_DIR}/staging"
@@ -38,7 +39,7 @@ fi
 # 3. Cek ketersediaan binary / stage files Limine
 HAS_LIMINE_STAGE=true
 for file in limine-bios-cd.bin limine-uefi-cd.bin; do
-    if [ ! -f "${LIMINE_DIR}/${file}" ]; then
+    if [ ! -f "${LIMINE_BIN_DIR}/${file}" ] && [ ! -f "${LIMINE_DIR}/${file}" ]; then
         HAS_LIMINE_STAGE=false
         break
     fi
@@ -113,15 +114,21 @@ fi
 # 7. Salin berkas-berkas Bootloader Limine (BIOS & UEFI stage files)
 echo "[*] Menyalin berkas boot stage Limine..."
 for file in limine-bios.sys limine-bios-cd.bin limine-uefi-cd.bin; do
-    if [ -f "${LIMINE_DIR}/${file}" ]; then
+    if [ -f "${LIMINE_BIN_DIR}/${file}" ]; then
+        cp "${LIMINE_BIN_DIR}/${file}" "${STAGING_DIR}/boot/limine/"
+    elif [ -f "${LIMINE_DIR}/${file}" ]; then
         cp "${LIMINE_DIR}/${file}" "${STAGING_DIR}/boot/limine/"
     fi
 done
 
-if [ -f "${LIMINE_DIR}/BOOTX64.EFI" ]; then
+if [ -f "${LIMINE_BIN_DIR}/BOOTX64.EFI" ]; then
+    cp "${LIMINE_BIN_DIR}/BOOTX64.EFI" "${STAGING_DIR}/EFI/BOOT/BOOTX64.EFI"
+elif [ -f "${LIMINE_DIR}/BOOTX64.EFI" ]; then
     cp "${LIMINE_DIR}/BOOTX64.EFI" "${STAGING_DIR}/EFI/BOOT/BOOTX64.EFI"
 fi
-if [ -f "${LIMINE_DIR}/BOOTIA32.EFI" ]; then
+if [ -f "${LIMINE_BIN_DIR}/BOOTIA32.EFI" ]; then
+    cp "${LIMINE_BIN_DIR}/BOOTIA32.EFI" "${STAGING_DIR}/EFI/BOOT/BOOTIA32.EFI"
+elif [ -f "${LIMINE_DIR}/BOOTIA32.EFI" ]; then
     cp "${LIMINE_DIR}/BOOTIA32.EFI" "${STAGING_DIR}/EFI/BOOT/BOOTIA32.EFI"
 fi
 
@@ -135,7 +142,10 @@ if command -v xorriso &> /dev/null; then
             -efi-boot-part --efi-boot-image --protective-msdos-label \
             "${STAGING_DIR}" -o "${OUTPUT_ISO}"
 
-        if [ -f "${LIMINE_DIR}/limine" ]; then
+        if [ -f "${LIMINE_BIN_DIR}/limine" ]; then
+            echo "[*] Memasang Limine BIOS Boot Record pada ISO..."
+            "${LIMINE_BIN_DIR}/limine" bios-install "${OUTPUT_ISO}"
+        elif [ -f "${LIMINE_DIR}/limine" ]; then
             echo "[*] Memasang Limine BIOS Boot Record pada ISO..."
             "${LIMINE_DIR}/limine" bios-install "${OUTPUT_ISO}"
         fi

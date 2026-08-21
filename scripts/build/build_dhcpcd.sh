@@ -82,8 +82,7 @@ echo "[+] Mengonfigurasi dhcpcd..."
         --localstatedir=/var \
         --runstatedir=/run \
         --dbdir=/var/lib/dhcpcd \
-        --with-hook=ntp.conf \
-        --with-hook=resolv.conf
+        --with-hook=ntp.conf
 )
 
 # 6. Kompilasi dhcpcd

@@ -71,13 +71,16 @@ mkdir -p "${BUILD_DIR}"
 echo "[+] Mengonfigurasi iwd..."
 (
     cd "${BUILD_DIR}"
+    export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:-}:/usr/lib/pkgconfig:/usr/share/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig"
+    unset PKG_CONFIG_SYSROOT_DIR
     "${IWD_DIR}/configure" \
         --prefix=/usr \
         --sysconfdir=/etc \
         --localstatedir=/var \
         --libexecdir=/usr/lib/iwd \
-        --enable-external-ell \
-        --disable-manual-pages
+        --disable-external-ell \
+        --disable-manual-pages \
+        --disable-systemd-service \
 )
 
 # 5. Kompilasi iwd
